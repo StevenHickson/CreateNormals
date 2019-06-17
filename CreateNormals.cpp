@@ -4,10 +4,10 @@ using namespace std;
 using namespace pcl;
 using namespace cv;
 
-#define KINECT_CX_D 3.2330780975300314e+02
+#define KINECT_CX_D 3.1304475870804731e+02
 #define KINECT_CY_D 2.4273913761751615e+02
-#define KINECT_FX_D 1.6828944189289601e-03
-#define KINECT_FY_D 1.6919313269589566e-03
+#define KINECT_FX_D 2.3844389626620386e+02
+#define KINECT_FY_D 5.8269103270988637e+02
 
 void GetMatFromCloud(const PointCloud<PointNormal> &cloud, Mat *img) {
 	*img = Mat(cloud.height, cloud.width, CV_32FC3);
@@ -25,8 +25,8 @@ void MakeCloudDense(PointCloud<PointXYZ> &cloud) {
 	for(int j = 0; j < cloud.height; j++) {
 		for(int i = 0; i < cloud.width; i++) {
 			if(isnan(p->z)) {
-				p->x = float(((float)i - KINECT_CX_D) * KINECT_FX_D);
-				p->y = float(((float)j - KINECT_CY_D) * KINECT_FY_D);
+				p->x = float(((float)i - KINECT_CX_D) / KINECT_FX_D);
+				p->y = float(((float)j - KINECT_CY_D) / KINECT_FY_D);
 				p->z = 0;
 			}
 			++p;
@@ -52,9 +52,9 @@ void CreatePointCloud(const Mat& input_depth,
     for (int i = 0; i < input_depth.cols; i++, pCloud++, pDepth++) {
       pCloud->z = *pDepth;
       pCloud->x = static_cast<float>(i - KINECT_CX_D) *
-                  *pDepth * KINECT_FX_D;
-      pCloud->y = static_cast<float>(j - KINECT_CY_D) *
-                  *pDepth * KINECT_FY_D;
+                  *pDepth / KINECT_FX_D;
+      pCloud->y = static_cast<float>(KINECT_CY_D - j) *
+                  *pDepth / KINECT_FY_D;
     }
   }
   cloud->sensor_origin_.setZero();
@@ -98,7 +98,11 @@ int main (int argc, char** argv) {
     Mat depth = imread(str, IMREAD_ANYDEPTH);
     if(depth.rows == 0) {
       std::cout << "Error, File: " << str << " doesn't exist" << std::endl;
+      return 1;
     }
+    // Convert nyu depth to float
+    depth.convertTo(depth, CV_32FC1);
+    depth = depth / 1000.0f;
     // Create cloud and estimate normals
     CreatePointCloud(depth, &cloud);
     EstimateNormals(cloud, &normals, true);
@@ -106,9 +110,7 @@ int main (int argc, char** argv) {
     // Let's save that data
     Mat normal_mat;
     GetMatFromCloud(normals, &normal_mat);
-    FileStorage output(str + ".yaml", FileStorage::WRITE);
-	  output << "normals" << normal_mat;
-	  output.release();
+    imwrite(str + ".exr", normal_mat);
   }
   return 0;
 }
