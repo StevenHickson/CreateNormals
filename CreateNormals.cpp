@@ -1,4 +1,5 @@
 #include "CreateNormals.h"
+#include "ConnectedComponents.h"
 
 using namespace std;
 using namespace pcl;
@@ -8,6 +9,29 @@ using namespace cv;
 #define KINECT_CY_D 2.4273913761751615e+02
 #define KINECT_FX_D 2.3844389626620386e+02
 #define KINECT_FY_D 5.8269103270988637e+02
+
+string type2str(int type) {
+  string r;
+
+  uchar depth = type & CV_MAT_DEPTH_MASK;
+  uchar chans = 1 + (type >> CV_CN_SHIFT);
+
+  switch ( depth ) {
+    case CV_8U:  r = "8U"; break;
+    case CV_8S:  r = "8S"; break;
+    case CV_16U: r = "16U"; break;
+    case CV_16S: r = "16S"; break;
+    case CV_32S: r = "32S"; break;
+    case CV_32F: r = "32F"; break;
+    case CV_64F: r = "64F"; break;
+    default:     r = "User"; break;
+  }
+
+  r += "C";
+  r += (chans+'0');
+
+  return r;
+}
 
 void GetMatFromCloud(const PointCloud<PointNormal> &cloud, Mat *img) {
 	*img = Mat(cloud.height, cloud.width, CV_32FC3);
@@ -87,30 +111,49 @@ void EstimateNormals(const PointCloud<PointXYZ> &cloud,
 	}
 }
 
+bool OpenImage(string &filename, Mat *output) {
+  *output = imread(filename, IMREAD_ANYDEPTH);
+  if(output->rows == 0) {
+      std::cout << "Error, File: " << filename << " doesn't exist" << std::endl;
+      return false;
+  }
+  return true;
+}
+
 int main (int argc, char** argv) {  
   std::ifstream file(argv[1]);
   std::string str; 
   while (std::getline(file, str)) {
+    int pos = str.find_last_of(",");
+    string depth_file = str.substr(0, pos);
+    string labels_file = str.substr(pos+1);
     PointCloud<PointXYZ> cloud;
     PointCloud<PointNormal> normals;
 
     // Open the depth file.
-    Mat depth = imread(str, IMREAD_ANYDEPTH);
-    if(depth.rows == 0) {
-      std::cout << "Error, File: " << str << " doesn't exist" << std::endl;
-      return 1;
-    }
+    Mat depth, labels;
+    if(!OpenImage(depth_file, &depth))
+      return -1;
+    // Open the labels file
+    if(!OpenImage(labels_file, &labels))
+      return -1;  
     // Convert nyu depth to float
     depth.convertTo(depth, CV_32FC1);
     depth = depth / 1000.0f;
+
     // Create cloud and estimate normals
     CreatePointCloud(depth, &cloud);
     EstimateNormals(cloud, &normals, true);
 
-    // Let's save that data
+    // Let's extract that data
     Mat normal_mat;
     GetMatFromCloud(normals, &normal_mat);
-    imwrite(str + ".exr", normal_mat);
+    imwrite(depth_file + ".exr", normal_mat);
+
+    cout << "Labels type: " << type2str(labels.type()) << endl;
+    // Let's smooth out the flat surfaces
+    ConnectedComponents(labels, &normal_mat);
+    imwrite(labels_file + ".exr", normal_mat);
   }
   return 0;
 }
