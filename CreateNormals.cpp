@@ -93,7 +93,7 @@ void EstimateNormals(const PointCloud<PointXYZ> &cloud,
                      bool fill) {
 	pcl::IntegralImageNormalEstimation<pcl::PointXYZ, pcl::PointNormal> ne;
 	ne.setNormalEstimationMethod (ne.COVARIANCE_MATRIX);
-	ne.setMaxDepthChangeFactor(0.02f);
+	ne.setMaxDepthChangeFactor(0.04f);
 	ne.setNormalSmoothingSize(30.0f);
 	ne.setInputCloud(cloud.makeShared());
 	ne.compute(*normals);

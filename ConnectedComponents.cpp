@@ -5,7 +5,7 @@ using namespace std;
 using namespace cv;
 
 //#define ANGLE_MAX 0.523599
-#define ANGLE_MAX 0.0872665
+#define ANGLE_MAX 0.0472665
 
 vector<int> flat_labels = {4,11,21};
 
