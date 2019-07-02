@@ -1,5 +1,7 @@
 #include "CreateNormals.h"
 #include "ConnectedComponents.h"
+#include <sys/time.h>
+#include <ctime>
 
 using namespace std;
 using namespace pcl;
@@ -93,7 +95,7 @@ void EstimateNormals(const PointCloud<PointXYZ> &cloud,
                      bool fill) {
 	pcl::IntegralImageNormalEstimation<pcl::PointXYZ, pcl::PointNormal> ne;
 	ne.setNormalEstimationMethod (ne.COVARIANCE_MATRIX);
-	ne.setMaxDepthChangeFactor(0.04f);
+	ne.setMaxDepthChangeFactor(0.02f);
 	ne.setNormalSmoothingSize(30.0f);
 	ne.setInputCloud(cloud.makeShared());
 	ne.compute(*normals);
@@ -152,7 +154,12 @@ int main (int argc, char** argv) {
 
     cout << "Labels type: " << type2str(labels.type()) << endl;
     // Let's smooth out the flat surfaces
-    ConnectedComponents(labels, &normal_mat);
+    //timeval a,b;
+    //gettimeofday(&a, 0);
+    ConnectedComponents2(labels, &normal_mat);
+    //gettimeofday(&b, 0);
+    //std::cout << "seconds difference: " << (b.tv_sec - a.tv_sec) << std::endl;
+    //std::cout << "milliseconds difference: " << (b.tv_usec - a.tv_usec) << std::endl;
     imwrite(labels_file + ".exr", normal_mat);
   }
   return 0;

@@ -83,3 +83,4 @@ public:
 };
 
 void ConnectedComponents(const cv::Mat &parents, cv::Mat *normals);
+void ConnectedComponents2(const cv::Mat &parents, cv::Mat *normals);
