@@ -82,55 +82,7 @@ void SegmentGraph(const vector<Edge> &edges, Universe *universe) {
   }
 }
 
-void ConnectedComponents(const Mat &labels, Mat *normals) {
-  vector<Edge> edges;
-  
-  // Segment the normals based on labels
-  int num_edges = BuildGraph(labels, *normals, false, &edges);
-  Universe uni(num_edges);
-  SegmentGraph(edges, &uni);
-
-  // Set up vector with normal values
-  map<int, ComponentInfo> info;
-
-  // Let's grab the normals for each segment
-  int i = 0;
-  int segment_count = 0;
-  Mat segments = Mat::zeros(labels.rows, labels.cols, CV_32S) - 1;
-  Mat_<Vec3f>::iterator pNormals = normals->begin<Vec3f>();
-  Mat_<int>::iterator pSegments = segments.begin<int>();
-  Mat_<uint16_t>::const_iterator pLabels = labels.begin<uint16_t>();
-  while(pNormals != normals->end<Vec3f>()) {
-    int segment = uni.find(i);
-    info[segment].AddValue(*pNormals);
-    *pSegments = segment;
-    i++; pNormals++; pSegments++; pLabels++;
-  }
-  // Let's calculate the averages of the info vector into a new vector
-  for(map<int, ComponentInfo>::iterator p = info.begin(); p != info.end(); p++) {
-    p->second.ComputeAverage();
-  }
-
-  // Now lets reset the normals to be the average across its segments
-  pNormals = normals->begin<Vec3f>();
-  pSegments = segments.begin<int>();
-  pLabels = labels.begin<uint16_t>();
-  while(pNormals != normals->end<Vec3f>()) {
-    if(*pSegments >= 0 && flat_labels[*pLabels]) {
-      *pNormals = info[*pSegments].GetAverage();
-    }
-    pSegments++; pNormals++; pLabels++;
-  }
-}
-
-void ConnectedComponents2(const Mat &labels, Mat *normals) {
-  vector<Edge> edges;
-  
-  // Segment the normals based on labels
-  int num_edges = BuildGraph(labels, *normals, true, &edges);
-  Universe uni(labels.rows * labels.cols);
-  SegmentGraph(edges, &uni);
-
+void ComputeAndSetNormalAverages(Universe &uni, const Mat &labels, Mat *normals) {
   // Set up vector with normal values
   map<int, ComponentInfo> info;
 
@@ -168,4 +120,27 @@ void ConnectedComponents2(const Mat &labels, Mat *normals) {
   }
 }
 
+void ConnectedComponents(const Mat &labels, Mat *normals) {
+  vector<Edge> edges;
+  
+  // Segment the normals based on labels
+  int num_edges = BuildGraph(labels, *normals, false, &edges);
+  Universe uni(num_edges);
+  SegmentGraph(edges, &uni);
+
+  // Compute and fix normal averages
+  ComputeAndSetNormalAverages(uni, labels, normals);
+}
+
+void ConnectedComponents2(const Mat &labels, Mat *normals) {
+  vector<Edge> edges;
+  
+  // Segment the normals based on labels
+  int num_edges = BuildGraph(labels, *normals, true, &edges);
+  Universe uni(labels.rows * labels.cols);
+  SegmentGraph(edges, &uni);
+
+  // Compute and fix normal averages
+  ComputeAndSetNormalAverages(uni, labels, normals);
+}
 
