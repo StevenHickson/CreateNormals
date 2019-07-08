@@ -94,5 +94,4 @@ public:
 	int num_sets() const { return num; }
 };
 
-void ConnectedComponents(const cv::Mat &parents, cv::Mat *normals);
-void ConnectedComponents2(const cv::Mat &parents, cv::Mat *normals);
+void ConnectedComponents(const cv::Mat &parents, const std::vector<bool> &flat_labels, bool fast_method, cv::Mat *normals);

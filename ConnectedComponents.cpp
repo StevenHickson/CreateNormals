@@ -8,7 +8,7 @@ using namespace cv;
 #define ANGLE_MAX 0.0472665
 
 // 4, 11, 21 all flat surfaces.
-vector<bool> flat_labels = {0,0,0,0,1,
+vector<bool> old_flat_labels = {0,0,0,0,1,
                             0,0,0,0,0,
                             0,1,0,0,0,
                             1,0,0,0,1,
@@ -24,14 +24,14 @@ bool isnan(const Vec3f& vec) {
   return (isnan(vec[0]) || isnan(vec[1]) || isnan(vec[2]));
 }
 
-float MeasureAngle(const Vec3f &a, const Vec3f &b, int a_label, int b_label) {
-  if(a_label != b_label || isnan(a) || isnan(b) || !flat_labels[a_label])
+float MeasureAngle(const vector<bool> &flat_labels, const Vec3f &a, const Vec3f &b, int a_label, int b_label) {
+  if(a_label != b_label || isnan(a) || isnan(b) || !old_flat_labels[a_label])
     return 100.0;
   float angle = acos(a[0] * b[0] + a[1] * b[1] + a[2] * b[2]);
   return angle;
 }
 
-int BuildGraph(const Mat &labels, const Mat &normals, bool reduce_edges, vector<Edge> *edges) {
+int BuildGraph(const Mat &labels, const Mat &normals, const vector<bool> &flat_labels, bool reduce_edges, vector<Edge> *edges) {
 	int width = labels.cols;
 	int height = labels.rows;
 	int num = 0;
@@ -42,12 +42,12 @@ int BuildGraph(const Mat &labels, const Mat &normals, bool reduce_edges, vector<
   edges->reserve(width * height * 2);
   for ( y = 0, ym = -1, yp = 1; y < height; y++, ym++, yp++) {
     for ( x = 0, xp = 1; x < width; x++, xp++) {
-      if (!reduce_edges || flat_labels[*pLabels]) {
+      if (!reduce_edges || old_flat_labels[*pLabels]) {
         if (x < safeWidth) {
           Edge edge;
           edge.a = y * width + x;
           edge.b = y * width + xp;
-          edge.weight = MeasureAngle(*pNormals, *(pNormals + 1), *pLabels, *(pLabels + 1));
+          edge.weight = MeasureAngle(old_flat_labels, *pNormals, *(pNormals + 1), *pLabels, *(pLabels + 1));
           if (!reduce_edges || (edge.weight < ANGLE_MAX && *pLabels == *(pLabels + 1))) {
             edges->push_back(edge);
             num++;
@@ -57,7 +57,7 @@ int BuildGraph(const Mat &labels, const Mat &normals, bool reduce_edges, vector<
           Edge edge;
           edge.a = y * width + x;
           edge.b = yp * width + x;
-          edge.weight = MeasureAngle(*pNormals, *(pNormals + width), *pLabels, *(pLabels + width));
+          edge.weight = MeasureAngle(flat_labels, *pNormals, *(pNormals + width), *pLabels, *(pLabels + width));
           if (!reduce_edges || (edge.weight < ANGLE_MAX && *pLabels == *(pLabels + 1))) {
             edges->push_back(edge);
             num++;
@@ -82,7 +82,7 @@ void SegmentGraph(const vector<Edge> &edges, Universe *universe) {
   }
 }
 
-void ComputeAndSetNormalAverages(Universe &uni, const Mat &labels, Mat *normals) {
+void ComputeAndSetNormalAverages(Universe &uni, const vector<bool> &flat_labels, const Mat &labels, Mat *normals) {
   // Set up vector with normal values
   map<int, ComponentInfo> info;
 
@@ -94,7 +94,7 @@ void ComputeAndSetNormalAverages(Universe &uni, const Mat &labels, Mat *normals)
   Mat_<int>::iterator pSegments = segments.begin<int>();
   Mat_<uint16_t>::const_iterator pLabels = labels.begin<uint16_t>();
   while(pNormals != normals->end<Vec3f>()) {
-    if (flat_labels[*pLabels]) {
+    if (old_flat_labels[*pLabels]) {
       int segment = uni.find(i);
       if(uni.size(segment) > 1) { 
         info[segment].AddValue(*pNormals);
@@ -113,34 +113,22 @@ void ComputeAndSetNormalAverages(Universe &uni, const Mat &labels, Mat *normals)
   pSegments = segments.begin<int>();
   pLabels = labels.begin<uint16_t>();
   while(pNormals != normals->end<Vec3f>()) {
-    if(*pSegments >= 0 && flat_labels[*pLabels]) {
+    if(*pSegments >= 0 && old_flat_labels[*pLabels]) {
       *pNormals = info[*pSegments].GetAverage();
     }
     pSegments++; pNormals++; pLabels++;
   }
 }
 
-void ConnectedComponents(const Mat &labels, Mat *normals) {
+void ConnectedComponents(const Mat &labels, const vector<bool> &flat_labels, bool fast_method, Mat *normals) {
   vector<Edge> edges;
   
   // Segment the normals based on labels
-  int num_edges = BuildGraph(labels, *normals, false, &edges);
-  Universe uni(num_edges);
+  int num_edges = BuildGraph(labels, *normals, flat_labels, fast_method, &edges);
+  Universe uni(labels.rows * labels.cols * 2);
   SegmentGraph(edges, &uni);
 
   // Compute and fix normal averages
-  ComputeAndSetNormalAverages(uni, labels, normals);
-}
-
-void ConnectedComponents2(const Mat &labels, Mat *normals) {
-  vector<Edge> edges;
-  
-  // Segment the normals based on labels
-  int num_edges = BuildGraph(labels, *normals, true, &edges);
-  Universe uni(labels.rows * labels.cols);
-  SegmentGraph(edges, &uni);
-
-  // Compute and fix normal averages
-  ComputeAndSetNormalAverages(uni, labels, normals);
+  ComputeAndSetNormalAverages(uni, flat_labels, labels, normals);
 }
 

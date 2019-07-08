@@ -2,6 +2,8 @@
 #include "ConnectedComponents.h"
 #include <sys/time.h>
 #include <ctime>
+#include <iostream>
+#include <sstream>
 
 using namespace std;
 using namespace pcl;
@@ -11,6 +13,28 @@ using namespace cv;
 #define KINECT_CY_D 2.4273913761751615e+02
 #define KINECT_FX_D 2.3844389626620386e+02
 #define KINECT_FY_D 5.8269103270988637e+02
+
+bool ReadParameters(string filename, vector<float> *params, vector<bool> *flat_labels) {
+  std::ifstream file(filename);
+  string line, value;
+  if(!getline(file, line))
+    return false;
+  istringstream ss(line);
+  while(getline(ss, value, ',')) {
+    params->push_back(stof(value));
+    cout << stof(value) << ",";
+  }
+  cout << endl;
+  if(!getline(file, line))
+    return false;
+  istringstream ss2(line);
+  while(getline(ss2, value, ',')) {
+    flat_labels->push_back(value[0] == '1');
+    cout << value << ",";
+  }
+  cout << endl;
+  return true;
+}
 
 void GetMatFromCloud(const PointCloud<PointNormal> &cloud, Mat *img) {
 	*img = Mat(cloud.height, cloud.width, CV_32FC3);
@@ -22,14 +46,14 @@ void GetMatFromCloud(const PointCloud<PointNormal> &cloud, Mat *img) {
 	}
 }
 
-void MakeCloudDense(PointCloud<PointXYZ> &cloud) {
+void MakeCloudDense(PointCloud<PointXYZ> &cloud, const vector<float> &params) {
 	PointCloud<PointXYZ>::iterator p = cloud.begin();
 	cloud.is_dense = true;
 	for(int j = 0; j < cloud.height; j++) {
 		for(int i = 0; i < cloud.width; i++) {
 			if(isnan(p->z)) {
-				p->x = float(((float)i - KINECT_CX_D) / KINECT_FX_D);
-				p->y = float(((float)j - KINECT_CY_D) / KINECT_FY_D);
+				p->x = float(((float)i - params[2]) / params[0]);
+				p->y = float(((float)j - params[5]) / params[4]);
 				p->z = 0;
 			}
 			++p;
@@ -38,6 +62,7 @@ void MakeCloudDense(PointCloud<PointXYZ> &cloud) {
 }
 
 void CreatePointCloud(const Mat& input_depth,
+                      const vector<float>& params,
                       PointCloud<PointXYZ>* cloud) {
   if (cloud == NULL) {
     std::cout << "cloud cannot be NULL in CreatePointCloud" << std::endl;
@@ -54,10 +79,10 @@ void CreatePointCloud(const Mat& input_depth,
   for (int j = 0; j < input_depth.rows; j++) {
     for (int i = 0; i < input_depth.cols; i++, pCloud++, pDepth++) {
       pCloud->z = *pDepth;
-      pCloud->x = static_cast<float>(i - KINECT_CX_D) *
-                  *pDepth / KINECT_FX_D;
-      pCloud->y = static_cast<float>(KINECT_CY_D - j) *
-                  *pDepth / KINECT_FY_D;
+      pCloud->x = static_cast<float>(i - params[2]) *
+                  *pDepth / params[0];
+      pCloud->y = static_cast<float>(params[5] - j) *
+                  *pDepth / params[4];
     }
   }
   cloud->sensor_origin_.setZero();
@@ -100,7 +125,14 @@ bool OpenImage(string &filename, Mat *output) {
 }
 
 int main (int argc, char** argv) {  
-  std::ifstream file(argv[1]);
+  vector<float> params;
+  vector<bool> flat_labels;
+  if (!ReadParameters(argv[1], &params, &flat_labels)) {
+    cout << "Error reading parameters" << endl;
+    return -1;
+  }
+
+  std::ifstream file(argv[2]);
   std::string str; 
   while (std::getline(file, str)) {
     int pos = str.find_last_of(",");
@@ -127,7 +159,7 @@ int main (int argc, char** argv) {
     inpaint(depth, mask_8bit, filled_depth, 5, INPAINT_NS);
 
     // Create cloud and estimate normals
-    CreatePointCloud(filled_depth, &cloud);
+    CreatePointCloud(filled_depth, params, &cloud);
     EstimateNormals(cloud, &normals, true);
 
     // Let's extract that data
@@ -138,7 +170,7 @@ int main (int argc, char** argv) {
     // Let's smooth out the flat surfaces
     timeval a,b;
     gettimeofday(&a, 0);
-    ConnectedComponents2(labels, &normal_mat);
+    ConnectedComponents(labels, flat_labels, true, &normal_mat);
     gettimeofday(&b, 0);
     std::cout << "seconds difference: " << (b.tv_sec - a.tv_sec) << std::endl;
     std::cout << "milliseconds difference: " << (b.tv_usec - a.tv_usec) << std::endl;
