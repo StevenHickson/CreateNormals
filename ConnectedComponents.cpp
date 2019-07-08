@@ -28,8 +28,6 @@ float MeasureAngle(const Vec3f &a, const Vec3f &b, int a_label, int b_label) {
   if(a_label != b_label || isnan(a) || isnan(b) || !flat_labels[a_label])
     return 100.0;
   float angle = acos(a[0] * b[0] + a[1] * b[1] + a[2] * b[2]);
-  //if(angle < 0 || angle > 5.75959)
-  //  cout << "Angle is: " << angle << endl;
   return angle;
 }
 
@@ -65,22 +63,6 @@ int BuildGraph(const Mat &labels, const Mat &normals, bool reduce_edges, vector<
             num++;
           }
         }
-        /*if (x < safeWidth && y < safeHeight) {
-          Edge edge;
-          edge.a = y * width + x;
-          edge.b = yp * width + xp;
-          edge.weight = MeasureAngle(*pNormals, *(pNormals + width + 1), *pLabels, *(pLabels + width + 1));
-          edges->push_back(edge);
-          num++;
-        }
-        if (x < safeWidth && y > 0) {
-          Edge edge;
-          edge.a  = y * width + x;
-          edge.b  = ym * width + xp;
-          edge.weight = MeasureAngle(*pNormals, *(pNormals - width + 1), *pLabels, *(pLabels - width + 1));
-          edges->push_back(edge);
-          num++;
-        }*/
       }
       pLabels++;
       pNormals++;
@@ -122,25 +104,16 @@ void ConnectedComponents(const Mat &labels, Mat *normals) {
   Mat_<int>::iterator pSegments = segments.begin<int>();
   Mat_<uint16_t>::const_iterator pLabels = labels.begin<uint16_t>();
   while(pNormals != normals->end<Vec3f>()) {
-    //if(find(flat_labels.begin(), flat_labels.end(), *pLabels) != flat_labels.end()) {
-      int segment = uni.find(i);
-      //cout << segment <<  ", " << uni.size(segment) << endl;
-      //if(uni.size(segment) > 1) { 
-        if(mapping.find(segment) == mapping.end()) {
-          mapping[segment] = segment_count;
-          segment_count++;
-        }
-        int s = mapping[segment];
-        info[s].AddValue(*pNormals);
-        *pSegments = s;
-      //}
-    //}
+    int segment = uni.find(i);
+    if(mapping.find(segment) == mapping.end()) {
+      mapping[segment] = segment_count;
+      segment_count++;
+    }
+    int s = mapping[segment];
+    info[s].AddValue(*pNormals);
+    *pSegments = s;
     i++; pNormals++; pSegments++; pLabels++;
   }
-  //Mat segments_write;
-  //segments.convertTo(segments_write, CV_16UC1);
-  //imwrite("/home/steve/datasets/nyu_dataset/nyu_dataset/depth/1_segments.png", segments_write);
-  //cout << "Number of segments: " << segment_count << endl;
   // Let's calculate the averages of the info vector into a new vector
   vector<Vec3f> info_averages;
   info_averages.resize(info.size());
@@ -154,7 +127,6 @@ void ConnectedComponents(const Mat &labels, Mat *normals) {
   pLabels = labels.begin<uint16_t>();
   while(pNormals != normals->end<Vec3f>()) {
     if(*pSegments >= 0 && flat_labels[*pLabels]) {
-      //cout << *pLabels << endl;
       *pNormals = info_averages[*pSegments];
     }
     pSegments++; pNormals++; pLabels++;
@@ -197,10 +169,6 @@ void ConnectedComponents2(const Mat &labels, Mat *normals) {
     }
     i++; pNormals++; pSegments++; pLabels++;
   }
-  //Mat segments_write;
-  //segments.convertTo(segments_write, CV_16UC1);
-  //imwrite("/home/steve/datasets/nyu_dataset/nyu_dataset/depth/1_segments.png", segments_write);
-  //cout << "Number of segments: " << segment_count << endl;
   // Let's calculate the averages of the info vector into a new vector
   vector<Vec3f> info_averages;
   info_averages.resize(info.size());
@@ -214,7 +182,6 @@ void ConnectedComponents2(const Mat &labels, Mat *normals) {
   pLabels = labels.begin<uint16_t>();
   while(pNormals != normals->end<Vec3f>()) {
     if(*pSegments >= 0 && flat_labels[*pLabels]) {
-      //cout << *pLabels << endl;
       *pNormals = info_averages[*pSegments];
     }
     pSegments++; pNormals++; pLabels++;

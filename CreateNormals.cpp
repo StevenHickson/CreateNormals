@@ -12,29 +12,6 @@ using namespace cv;
 #define KINECT_FX_D 2.3844389626620386e+02
 #define KINECT_FY_D 5.8269103270988637e+02
 
-string type2str(int type) {
-  string r;
-
-  uchar depth = type & CV_MAT_DEPTH_MASK;
-  uchar chans = 1 + (type >> CV_CN_SHIFT);
-
-  switch ( depth ) {
-    case CV_8U:  r = "8U"; break;
-    case CV_8S:  r = "8S"; break;
-    case CV_16U: r = "16U"; break;
-    case CV_16S: r = "16S"; break;
-    case CV_32S: r = "32S"; break;
-    case CV_32F: r = "32F"; break;
-    case CV_64F: r = "64F"; break;
-    default:     r = "User"; break;
-  }
-
-  r += "C";
-  r += (chans+'0');
-
-  return r;
-}
-
 void GetMatFromCloud(const PointCloud<PointNormal> &cloud, Mat *img) {
 	*img = Mat(cloud.height, cloud.width, CV_32FC3);
 	Mat_<Vec3f>::iterator pI = img->begin<Vec3f>();
@@ -158,7 +135,6 @@ int main (int argc, char** argv) {
     GetMatFromCloud(normals, &normal_mat);
     imwrite(depth_file + ".exr", normal_mat);
 
-    cout << "Labels type: " << type2str(labels.type()) << endl;
     // Let's smooth out the flat surfaces
     timeval a,b;
     gettimeofday(&a, 0);
