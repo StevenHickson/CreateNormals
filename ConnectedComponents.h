@@ -54,9 +54,17 @@ public:
 	int find(int a)
 	{
 		int b = a;
-		while (b != elements[b].parent)
+    std::vector<int> update_parents_list;
+		while (b != elements[b].parent) {
+      update_parents_list.push_back(b);
 			b = elements[b].parent;
-		elements[a].parent = b;
+    }
+    // Path compression
+    std::vector<int>::iterator p = update_parents_list.begin();
+    while (p != update_parents_list.end()) {
+      elements[*p].parent = b;
+      p++;
+    }
 		return b;
 	};  
 	void join(int a, int b)

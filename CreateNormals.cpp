@@ -143,8 +143,14 @@ int main (int argc, char** argv) {
     depth.convertTo(depth, CV_32FC1);
     depth = depth / 1000.0f;
 
+    // Inpaint the depth holes
+    Mat mask, mask_8bit, filled_depth;
+    threshold(depth, mask, 0, 1, THRESH_BINARY_INV);
+    mask.convertTo(mask_8bit, CV_8U);
+    inpaint(depth, mask_8bit, filled_depth, 5, INPAINT_NS);
+
     // Create cloud and estimate normals
-    CreatePointCloud(depth, &cloud);
+    CreatePointCloud(filled_depth, &cloud);
     EstimateNormals(cloud, &normals, true);
 
     // Let's extract that data
@@ -154,12 +160,12 @@ int main (int argc, char** argv) {
 
     cout << "Labels type: " << type2str(labels.type()) << endl;
     // Let's smooth out the flat surfaces
-    //timeval a,b;
-    //gettimeofday(&a, 0);
+    timeval a,b;
+    gettimeofday(&a, 0);
     ConnectedComponents2(labels, &normal_mat);
-    //gettimeofday(&b, 0);
-    //std::cout << "seconds difference: " << (b.tv_sec - a.tv_sec) << std::endl;
-    //std::cout << "milliseconds difference: " << (b.tv_usec - a.tv_usec) << std::endl;
+    gettimeofday(&b, 0);
+    std::cout << "seconds difference: " << (b.tv_sec - a.tv_sec) << std::endl;
+    std::cout << "milliseconds difference: " << (b.tv_usec - a.tv_usec) << std::endl;
     imwrite(labels_file + ".exr", normal_mat);
   }
   return 0;
