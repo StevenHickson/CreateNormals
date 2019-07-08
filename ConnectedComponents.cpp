@@ -91,10 +91,7 @@ void ConnectedComponents(const Mat &labels, Mat *normals) {
   SegmentGraph(edges, &uni);
 
   // Set up vector with normal values
-  vector<ComponentInfo> info;
-  info.resize(uni.num_sets());
-  //cout << "Number of sets: " << uni.num_sets() << endl;
-  map<int, int> mapping;
+  map<int, ComponentInfo> info;
 
   // Let's grab the normals for each segment
   int i = 0;
@@ -105,20 +102,13 @@ void ConnectedComponents(const Mat &labels, Mat *normals) {
   Mat_<uint16_t>::const_iterator pLabels = labels.begin<uint16_t>();
   while(pNormals != normals->end<Vec3f>()) {
     int segment = uni.find(i);
-    if(mapping.find(segment) == mapping.end()) {
-      mapping[segment] = segment_count;
-      segment_count++;
-    }
-    int s = mapping[segment];
-    info[s].AddValue(*pNormals);
-    *pSegments = s;
+    info[segment].AddValue(*pNormals);
+    *pSegments = segment;
     i++; pNormals++; pSegments++; pLabels++;
   }
   // Let's calculate the averages of the info vector into a new vector
-  vector<Vec3f> info_averages;
-  info_averages.resize(info.size());
-  for(unsigned int j = 0; j < info.size(); j++) {
-    info_averages[j] = info[j].GetAverage();
+  for(map<int, ComponentInfo>::iterator p = info.begin(); p != info.end(); p++) {
+    p->second.ComputeAverage();
   }
 
   // Now lets reset the normals to be the average across its segments
@@ -127,7 +117,7 @@ void ConnectedComponents(const Mat &labels, Mat *normals) {
   pLabels = labels.begin<uint16_t>();
   while(pNormals != normals->end<Vec3f>()) {
     if(*pSegments >= 0 && flat_labels[*pLabels]) {
-      *pNormals = info_averages[*pSegments];
+      *pNormals = info[*pSegments].GetAverage();
     }
     pSegments++; pNormals++; pLabels++;
   }
@@ -142,10 +132,7 @@ void ConnectedComponents2(const Mat &labels, Mat *normals) {
   SegmentGraph(edges, &uni);
 
   // Set up vector with normal values
-  vector<ComponentInfo> info;
-  info.resize(uni.num_sets());
-  //cout << "Number of sets: " << uni.num_sets() << endl;
-  map<int, int> mapping;
+  map<int, ComponentInfo> info;
 
   // Let's grab the normals for each segment
   int i = 0;
@@ -158,22 +145,15 @@ void ConnectedComponents2(const Mat &labels, Mat *normals) {
     if (flat_labels[*pLabels]) {
       int segment = uni.find(i);
       if(uni.size(segment) > 1) { 
-        if(mapping.find(segment) == mapping.end()) {
-          mapping[segment] = segment_count;
-          segment_count++;
-        }
-        int s = mapping[segment];
-        info[s].AddValue(*pNormals);
-        *pSegments = s;
+        info[segment].AddValue(*pNormals);
+        *pSegments = segment;
       }
     }
     i++; pNormals++; pSegments++; pLabels++;
   }
   // Let's calculate the averages of the info vector into a new vector
-  vector<Vec3f> info_averages;
-  info_averages.resize(info.size());
-  for(unsigned int j = 0; j < info.size(); j++) {
-    info_averages[j] = info[j].GetAverage();
+  for(map<int, ComponentInfo>::iterator p = info.begin(); p != info.end(); p++) {
+    p->second.ComputeAverage();
   }
 
   // Now lets reset the normals to be the average across its segments
@@ -182,7 +162,7 @@ void ConnectedComponents2(const Mat &labels, Mat *normals) {
   pLabels = labels.begin<uint16_t>();
   while(pNormals != normals->end<Vec3f>()) {
     if(*pSegments >= 0 && flat_labels[*pLabels]) {
-      *pNormals = info_averages[*pSegments];
+      *pNormals = info[*pSegments].GetAverage();
     }
     pSegments++; pNormals++; pLabels++;
   }

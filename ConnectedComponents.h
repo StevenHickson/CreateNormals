@@ -3,6 +3,7 @@
 
 class ComponentInfo {
     double sum_x, sum_y, sum_z;
+    cv::Vec3f average;
     int count;
 public:
     ComponentInfo() : sum_x(0), sum_y(0), sum_z(0), count(0) {}
@@ -12,8 +13,11 @@ public:
         sum_z += val[2];
         count++;
     }
+    void ComputeAverage() {
+        average = cv::Vec3f(sum_x / double(count), sum_y / double(count), sum_z / double(count));
+    }
     cv::Vec3f GetAverage() {
-        return cv::Vec3f(sum_x / double(count), sum_y / double(count), sum_z / double(count));
+      return average;
     }
 };
 
