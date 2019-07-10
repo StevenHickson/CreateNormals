@@ -166,6 +166,33 @@ void CreateNormals(const vector<float> &camera_params,
 
 }
 
+void CreateNormalsPython(float *camera_params,
+                   int camera_params_length,
+                   float *normal_params,
+                   int normal_params_length,
+                   bool* flat_labels,
+                   int flat_labels_length,
+                   int width,
+                   int height,
+                   unsigned short int *depth,
+                   unsigned short int *labels,
+                   float *output) {
+  vector<float> camera_params_vec, normal_params_vec;
+  vector<bool> flat_labels_vec;
+
+  // Initialize vectors
+  camera_params_vec.assign(camera_params, camera_params + camera_params_length);
+  normal_params_vec.assign(normal_params, normal_params + normal_params_length);
+  flat_labels_vec.assign(flat_labels, flat_labels + flat_labels_length);
+
+  // Initialize cv::Mats
+  Mat depth_mat(height, width, CV_16UC1, depth);
+  Mat labels_mat(height, width, CV_16UC1, labels);
+  Mat output_mat;
+  CreateNormals(camera_params_vec, normal_params_vec, flat_labels_vec, depth_mat, labels_mat, &output_mat);
+  memcpy(output, output_mat.data, height * width * 3 * sizeof(float));
+}
+
 bool CreateNormals(const vector<float> &camera_params,
                    const vector<float> &normal_params,
                    const vector<bool> &flat_labels,
@@ -183,4 +210,5 @@ bool CreateNormals(const vector<float> &camera_params,
   imwrite(output_file, normal_mat);
   return true;
 }
+
 

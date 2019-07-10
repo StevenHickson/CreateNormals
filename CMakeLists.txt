@@ -34,7 +34,7 @@ list(REMOVE_DUPLICATES CreateNormals_INCLUDE_DIRS)
 include_directories(${CreateNormals_INCLUDE_DIRS})
 
 
-add_Library (CreateNormals CreateNormals.cpp ConnectedComponents.cpp ${CreateNormals_HEADERS})
+add_Library (CreateNormals SHARED CreateNormals.cpp ConnectedComponents.cpp ${CreateNormals_HEADERS})
 target_link_libraries (CreateNormals ${PCL_LIBRARIES} ${OpenCV_LIBS})
 
 add_executable (CreateNormalsMain CreateNormalsMain.cpp ${CreateNormals_HEADERS})
