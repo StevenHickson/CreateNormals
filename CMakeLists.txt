@@ -36,6 +36,3 @@ include_directories(${CreateNormals_INCLUDE_DIRS})
 
 add_executable (CreateNormals CreateNormals.cpp ConnectedComponents.cpp ${CreateNormals_HEADERS})
 target_link_libraries (CreateNormals ${PCL_LIBRARIES} ${OpenCV_LIBS})
-
-add_executable (ConvertDeps ConvertDeps.cpp)
-target_link_libraries (ConvertDeps ${OpenCV_LIBS})
