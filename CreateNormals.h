@@ -1,10 +1,18 @@
 #include <iostream>
-#include <pcl/io/pcd_io.h>
-#include <pcl/io/ply_io.h>
-#include <pcl/point_types.h>
-#include <pcl/point_cloud.h>
-#include <pcl/features/integral_image_normal.h>
-
 #include <opencv2/opencv.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
+
+bool ReadParameters(const std::string &filename,
+                    std::vector<float> *params,
+                    std::vector<bool> *flat_labels);
+void CreateNormals(const std::vector<float> &params,
+                   const std::vector<bool> &flat_labels,
+                   const cv::Mat &depth,
+                   const cv::Mat &labels,
+                   cv::Mat *output);
+bool CreateNormals(const std::vector<float> &params,
+                   const std::vector<bool> &flat_labels,
+                   const std::string &depth_file,
+                   const std::string &labels_file,
+                   const std::string &output_file);

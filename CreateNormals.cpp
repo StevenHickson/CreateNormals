@@ -1,8 +1,10 @@
 #include "CreateNormals.h"
 #include "ConnectedComponents.h"
-#include <sys/time.h>
-#include <ctime>
-#include <iostream>
+#include <pcl/io/pcd_io.h>
+#include <pcl/io/ply_io.h>
+#include <pcl/point_types.h>
+#include <pcl/point_cloud.h>
+#include <pcl/features/integral_image_normal.h>
 #include <sstream>
 
 using namespace std;
@@ -115,73 +117,48 @@ bool OpenImage(const string &filename, Mat *output) {
   return true;
 }
 
-bool CreateNormals(const vector<float> &params,
+void CreateNormals(const vector<float> &params,
                    const vector<bool> &flat_labels,
-                   const string &depth_file,
-                   const string &labels_file,
-                   const string &output_file) {
+                   const Mat &depth,
+                   const Mat &labels,
+                   Mat *output) {
   PointCloud<PointXYZ> cloud;
   PointCloud<PointNormal> normals;
-  // Open the depth file.
-  Mat depth, labels;
-  if(!OpenImage(depth_file, &depth))
-    return false;
-  // Open the labels file
-  if(!OpenImage(labels_file, &labels))
-    return false;  
   // Convert nyu depth to float
-  depth.convertTo(depth, CV_32FC1);
-  depth = depth / 1000.0f;
-
+  Mat new_depth, mask, mask_8bit, filled_depth;
+  depth.convertTo(new_depth, CV_32FC1);
+  new_depth = new_depth / 1000.0f;
   // Inpaint the depth holes
-  Mat mask, mask_8bit, filled_depth;
-  threshold(depth, mask, 0, 1, THRESH_BINARY_INV);
+  threshold(new_depth, mask, 0, 1, THRESH_BINARY_INV);
   mask.convertTo(mask_8bit, CV_8U);
-  inpaint(depth, mask_8bit, filled_depth, 5, INPAINT_NS);
+  inpaint(new_depth, mask_8bit, filled_depth, 5, INPAINT_NS);
 
   // Create cloud and estimate normals
   CreatePointCloud(filled_depth, params, &cloud);
   EstimateNormals(cloud, &normals, true);
 
   // Let's extract that data
-  Mat normal_mat;
-  GetMatFromCloud(normals, &normal_mat);
-  imwrite(output_file, normal_mat);
+  GetMatFromCloud(normals, output);
 
   // Let's smooth out the flat surfaces
-  ConnectedComponents(labels, flat_labels, true, &normal_mat);
-  imwrite(labels_file + ".exr", normal_mat);
+  ConnectedComponents(labels, flat_labels, true, output);
+
+}
+
+bool CreateNormals(const vector<float> &params,
+                   const vector<bool> &flat_labels,
+                   const string &depth_file,
+                   const string &labels_file,
+                   const string &output_file) {
+  // Open the depth file.
+  Mat depth, labels, normal_mat;
+  if(!OpenImage(depth_file, &depth))
+    return false;
+  // Open the labels file
+  if(!OpenImage(labels_file, &labels))
+    return false;  
+  CreateNormals(params, flat_labels, depth, labels, &normal_mat);
+  imwrite(output_file, normal_mat);
   return true;
 }
 
-int main (int argc, char** argv) {  
-  vector<float> params;
-  vector<bool> flat_labels;
-  if (!ReadParameters(argv[1], &params, &flat_labels)) {
-    cout << "Error reading parameters" << endl;
-    return -1;
-  }
-  
-  if (argc == 3) {
-    std::ifstream file(argv[2]);
-    std::string str; 
-    while (std::getline(file, str)) {
-      int pos = str.find_last_of(",");
-      string remainder = str.substr(0, pos);
-      string output_file = str.substr(pos+1);
-      pos = remainder.find_last_of(",");
-      string depth_file = remainder.substr(0, pos);
-      string labels_file = remainder.substr(pos+1);
-      if (!CreateNormals(params, flat_labels, depth_file, labels_file, output_file))
-        return -1;
-    }
-  } else if (argc == 5) {
-      if (!CreateNormals(params, flat_labels, string(argv[2]), string(argv[3]), string(argv[4])))
-        return -1;
-  } else {
-    cout << "Improper usage. Must be CreateNormals params_file text_file" << endl;
-    cout << "Or CreateNormals params_file depth_file labels_file output_file" << endl;
-    return -1;
-  }
-  return 0;
-}
