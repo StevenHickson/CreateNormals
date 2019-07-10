@@ -1,5 +1,8 @@
 # CreateNormals
 
+[The paper can be found here](https://arxiv.org/abs/1906.06792)
+
+
 This Contains the CreateNormals library. Using a depth and semantic label pair of images, we create a denoised and semantically corrected surface normals image.
 
 ![alt text](https://raw.githubusercontent.com/StevenHickson/CreateNormals/master/example.png)
@@ -21,6 +24,7 @@ cmake -DCMAKE_BUILD_TYPE=Release ..
 
 The example params and list are included to see how the example script runs.
 Params is set up as two lines. The first line is the camera parameters flattened as a vector. Fx, scew, Cx, 0, Fy, Cy, 0, 0, scale.
-The second line is the mapping of semantic labels that are considered flat (i.e. floors). 1 is a semantic label that is flat, 0 is not.
+The second line are the surface normal computation parameters. These are the inpainting window (we use 5), the normal max depth change factor (we use 0.02), and the normal adaptive smoothing size (we use 30 for Kinect1/2 data and 10 for synthetic data).
+The third line is the mapping of semantic labels that are considered flat (i.e. floors). 1 is a semantic label that is flat, 0 is not.
 
 The list file is comma-delimited depth_file,labels_file,output_file.
