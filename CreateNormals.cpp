@@ -37,9 +37,13 @@ bool ReadParameters(const string &filename,
   // Finally, we get the flat semantic labels.
   if(!getline(file, line))
     return false;
+  // We need to initialize flat labels to be very large so users don't need to send over 1000 zeros.
+  *flat_labels = vector<bool>(1000, 0);
   istringstream ss3(line);
+  int c = 0;
   while(getline(ss3, value, ',')) {
-    flat_labels->push_back(value[0] == '1');
+    (*flat_labels)[c] = (value[0] == '1');
+    c++;
   }
   return true;
 }
