@@ -1,0 +1,6 @@
+/home/steve/datasets/nyu_dataset/nyu_dataset/depth/7.png,/home/steve/datasets/nyu_dataset/nyu_dataset/labels/7.png,/home/steve/datasets/nyu_dataset/nyu_dataset/normals/7.exr
+/home/steve/datasets/nyu_dataset/nyu_dataset/depth/8.png,/home/steve/datasets/nyu_dataset/nyu_dataset/labels/8.png,/home/steve/datasets/nyu_dataset/nyu_dataset/normals/8.exr
+/home/steve/datasets/nyu_dataset/nyu_dataset/depth/9.png,/home/steve/datasets/nyu_dataset/nyu_dataset/labels/9.png,/home/steve/datasets/nyu_dataset/nyu_dataset/normals/9.exr
+/home/steve/datasets/nyu_dataset/nyu_dataset/depth/10.png,/home/steve/datasets/nyu_dataset/nyu_dataset/labels/10.png,/home/steve/datasets/nyu_dataset/nyu_dataset/normals/10.exr
+/home/steve/datasets/nyu_dataset/nyu_dataset/depth/11.png,/home/steve/datasets/nyu_dataset/nyu_dataset/labels/11.png,/home/steve/datasets/nyu_dataset/nyu_dataset/normals/11.exr
+/home/steve/datasets/nyu_dataset/nyu_dataset/depth/12.png,/home/steve/datasets/nyu_dataset/nyu_dataset/labels/12.png,/home/steve/datasets/nyu_dataset/nyu_dataset/normals/12.exr
