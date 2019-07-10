@@ -1,5 +1,8 @@
 # CreateNormals
 
+[The paper can be found here](https://arxiv.org/abs/1906.06792)
+
+
 This Contains the CreateNormals library. Using a depth and semantic label pair of images, we create a denoised and semantically corrected surface normals image.
 
 ![alt text](https://raw.githubusercontent.com/StevenHickson/CreateNormals/master/example.png)
