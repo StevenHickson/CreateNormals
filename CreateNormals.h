@@ -4,14 +4,17 @@
 #include <opencv2/imgproc/imgproc.hpp>
 
 bool ReadParameters(const std::string &filename,
-                    std::vector<float> *params,
+                    std::vector<float> *camera_params,
+                    std::vector<float> *normal_params,
                     std::vector<bool> *flat_labels);
-void CreateNormals(const std::vector<float> &params,
+void CreateNormals(const std::vector<float> &camera_params,
+                   const std::vector<float> &normal_params,
                    const std::vector<bool> &flat_labels,
                    const cv::Mat &depth,
                    const cv::Mat &labels,
                    cv::Mat *output);
-bool CreateNormals(const std::vector<float> &params,
+bool CreateNormals(const std::vector<float> &camera_params,
+                   const std::vector<float> &normal_params,
                    const std::vector<bool> &flat_labels,
                    const std::string &depth_file,
                    const std::string &labels_file,

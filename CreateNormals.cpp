@@ -11,19 +11,34 @@ using namespace std;
 using namespace pcl;
 using namespace cv;
 
-bool ReadParameters(const string &filename, vector<float> *params, vector<bool> *flat_labels) {
+bool ReadParameters(const string &filename,
+                    vector<float> *camera_params,
+                    vector<float> *normals_params,
+                    vector<bool> *flat_labels) {
   std::ifstream file(filename);
   string line, value;
+  
+  // Let's get the camera params from the first line
   if(!getline(file, line))
     return false;
   istringstream ss(line);
   while(getline(ss, value, ',')) {
-    params->push_back(stof(value));
+    camera_params->push_back(stof(value));
   }
+
+  // Next we get the surface normal params
   if(!getline(file, line))
     return false;
   istringstream ss2(line);
   while(getline(ss2, value, ',')) {
+    normals_params->push_back(stof(value));
+  }
+
+  // Finally, we get the flat semantic labels.
+  if(!getline(file, line))
+    return false;
+  istringstream ss3(line);
+  while(getline(ss3, value, ',')) {
     flat_labels->push_back(value[0] == '1');
   }
   return true;
@@ -39,14 +54,14 @@ void GetMatFromCloud(const PointCloud<PointNormal> &cloud, Mat *img) {
 	}
 }
 
-void MakeCloudDense(PointCloud<PointXYZ> &cloud, const vector<float> &params) {
+void MakeCloudDense(PointCloud<PointXYZ> &cloud, const vector<float> &camera_params) {
 	PointCloud<PointXYZ>::iterator p = cloud.begin();
 	cloud.is_dense = true;
 	for(int j = 0; j < cloud.height; j++) {
 		for(int i = 0; i < cloud.width; i++) {
 			if(isnan(p->z)) {
-				p->x = float(((float)i - params[2]) / params[0]);
-				p->y = float(((float)j - params[5]) / params[4]);
+				p->x = float(((float)i - camera_params[2]) / camera_params[0]);
+				p->y = float(((float)j - camera_params[5]) / camera_params[4]);
 				p->z = 0;
 			}
 			++p;
@@ -55,7 +70,7 @@ void MakeCloudDense(PointCloud<PointXYZ> &cloud, const vector<float> &params) {
 }
 
 void CreatePointCloud(const Mat& input_depth,
-                      const vector<float>& params,
+                      const vector<float>& camera_params,
                       PointCloud<PointXYZ>* cloud) {
   if (cloud == NULL) {
     std::cout << "cloud cannot be NULL in CreatePointCloud" << std::endl;
@@ -72,10 +87,10 @@ void CreatePointCloud(const Mat& input_depth,
   for (int j = 0; j < input_depth.rows; j++) {
     for (int i = 0; i < input_depth.cols; i++, pCloud++, pDepth++) {
       pCloud->z = *pDepth;
-      pCloud->x = static_cast<float>(i - params[2]) *
-                  *pDepth / params[0];
-      pCloud->y = static_cast<float>(params[5] - j) *
-                  *pDepth / params[4];
+      pCloud->x = static_cast<float>(i - camera_params[2]) *
+                  *pDepth / camera_params[0];
+      pCloud->y = static_cast<float>(camera_params[5] - j) *
+                  *pDepth / camera_params[4];
     }
   }
   cloud->sensor_origin_.setZero();
@@ -86,12 +101,13 @@ void CreatePointCloud(const Mat& input_depth,
 }
 
 void EstimateNormals(const PointCloud<PointXYZ> &cloud,
+                     const vector<float> &normal_params,
                      PointCloud<PointNormal> *normals,
                      bool fill) {
 	pcl::IntegralImageNormalEstimation<pcl::PointXYZ, pcl::PointNormal> ne;
 	ne.setNormalEstimationMethod (ne.COVARIANCE_MATRIX);
-	ne.setMaxDepthChangeFactor(0.02f);
-	ne.setNormalSmoothingSize(30.0f);
+	ne.setMaxDepthChangeFactor(normal_params[1]);
+	ne.setNormalSmoothingSize(normal_params[2]);
 	ne.setInputCloud(cloud.makeShared());
 	ne.compute(*normals);
 	if(fill) {
@@ -117,7 +133,8 @@ bool OpenImage(const string &filename, Mat *output) {
   return true;
 }
 
-void CreateNormals(const vector<float> &params,
+void CreateNormals(const vector<float> &camera_params,
+                   const vector<float> &normal_params,
                    const vector<bool> &flat_labels,
                    const Mat &depth,
                    const Mat &labels,
@@ -131,11 +148,11 @@ void CreateNormals(const vector<float> &params,
   // Inpaint the depth holes
   threshold(new_depth, mask, 0, 1, THRESH_BINARY_INV);
   mask.convertTo(mask_8bit, CV_8U);
-  inpaint(new_depth, mask_8bit, filled_depth, 5, INPAINT_NS);
+  inpaint(new_depth, mask_8bit, filled_depth, normal_params[0], INPAINT_NS);
 
   // Create cloud and estimate normals
-  CreatePointCloud(filled_depth, params, &cloud);
-  EstimateNormals(cloud, &normals, true);
+  CreatePointCloud(filled_depth, camera_params, &cloud);
+  EstimateNormals(cloud, normal_params, &normals, true);
 
   // Let's extract that data
   GetMatFromCloud(normals, output);
@@ -145,7 +162,8 @@ void CreateNormals(const vector<float> &params,
 
 }
 
-bool CreateNormals(const vector<float> &params,
+bool CreateNormals(const vector<float> &camera_params,
+                   const vector<float> &normal_params,
                    const vector<bool> &flat_labels,
                    const string &depth_file,
                    const string &labels_file,
@@ -157,7 +175,7 @@ bool CreateNormals(const vector<float> &params,
   // Open the labels file
   if(!OpenImage(labels_file, &labels))
     return false;  
-  CreateNormals(params, flat_labels, depth, labels, &normal_mat);
+  CreateNormals(camera_params, normal_params, flat_labels, depth, labels, &normal_mat);
   imwrite(output_file, normal_mat);
   return true;
 }

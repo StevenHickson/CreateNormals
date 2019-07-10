@@ -3,9 +3,9 @@
 using namespace std;
 
 int main (int argc, char** argv) {  
-  vector<float> params;
+  vector<float> camera_params, normal_params;
   vector<bool> flat_labels;
-  if (!ReadParameters(argv[1], &params, &flat_labels)) {
+  if (!ReadParameters(argv[1], &camera_params, &normal_params, &flat_labels)) {
     cout << "Error reading parameters" << endl;
     return -1;
   }
@@ -20,11 +20,11 @@ int main (int argc, char** argv) {
       pos = remainder.find_last_of(",");
       string depth_file = remainder.substr(0, pos);
       string labels_file = remainder.substr(pos+1);
-      if (!CreateNormals(params, flat_labels, depth_file, labels_file, output_file))
+      if (!CreateNormals(camera_params, normal_params, flat_labels, depth_file, labels_file, output_file))
         return -1;
     }
   } else if (argc == 5) {
-      if (!CreateNormals(params, flat_labels, string(argv[2]), string(argv[3]), string(argv[4])))
+      if (!CreateNormals(camera_params, normal_params, flat_labels, string(argv[2]), string(argv[3]), string(argv[4])))
         return -1;
   } else {
     cout << "Improper usage. Must be CreateNormalsMain params_file text_file" << endl;
