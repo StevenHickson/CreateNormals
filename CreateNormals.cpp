@@ -37,13 +37,11 @@ bool ReadParameters(const string &filename,
   // Finally, we get the flat semantic labels.
   if(!getline(file, line))
     return false;
-  // We need to initialize flat labels to be very large so users don't need to send over 1000 zeros.
+  // We need to initialize flat labels to be very large to prevent overflow..
   *flat_labels = vector<bool>(1000, 0);
   istringstream ss3(line);
-  int c = 0;
   while(getline(ss3, value, ',')) {
-    (*flat_labels)[c] = (value[0] == '1');
-    c++;
+    (*flat_labels)[stoi(value)] = true;
   }
   return true;
 }
@@ -170,7 +168,7 @@ void CreateNormalsPython(float *camera_params,
                    int camera_params_length,
                    float *normal_params,
                    int normal_params_length,
-                   bool* flat_labels,
+                   int* flat_labels,
                    int flat_labels_length,
                    int width,
                    int height,
@@ -178,14 +176,18 @@ void CreateNormalsPython(float *camera_params,
                    unsigned short int *labels,
                    float *output) {
   vector<float> camera_params_vec, normal_params_vec;
+  vector<int> flat_labels_conv;
   vector<bool> flat_labels_vec;
 
   // Initialize vectors
   camera_params_vec.assign(camera_params, camera_params + camera_params_length);
   normal_params_vec.assign(normal_params, normal_params + normal_params_length);
-  flat_labels_vec.assign(flat_labels, flat_labels + flat_labels_length);
+  flat_labels_conv.assign(flat_labels, flat_labels + flat_labels_length);
   // resize flat_labels to 1000 to prevent overflow errors
   flat_labels_vec.resize(1000,0);
+  vector<int>::iterator p = flat_labels_conv.begin();
+  while (p != flat_labels_conv.end())
+    flat_labels_vec[*p++] = true;
 
   // Initialize cv::Mats
   Mat depth_mat(height, width, CV_16UC1, depth);
