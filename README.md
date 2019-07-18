@@ -36,14 +36,14 @@ The list file is comma-delimited depth_file,labels_file,output_file.
 # Python library/use
 
 An example of using the library in python is shown in the Test_Normals.ipynb file utilizing the python directory. It is a little slower than the normal method and only runs at 10FPS on my machine.
-Full details of the in depth ctypes code can be found in the [python Readme](https://raw.githubusercontent.com/StevenHickson/CreateNormals/master/python/README.md)
+Full details of the in depth ctypes code can be found in the [python Readme](https://github.com/StevenHickson/CreateNormals/tree/master/python/)
 The gist of it is:
 ```
 import sys
 sys.path.append('/home/steve/git/CreateNormals/')
 from python.calc_normals import NormalCalculation
 
-camera_params = [2.3844389626620386e+02,0,3.1304475870804731e+02,0,5.8269103270988637e+02,2.4273913761751615e+02,0,0,1]
+camera_params = [238.44,0,313.04,0,582.69,242.74,0,0,1]
 normal_params = [5,0.02,30]
 flat_labels = [4,11,15,19,21,28,34,36,37,45,64]
 norm_calc = NormalCalculation(camera_params, normal_params, flat_labels)
