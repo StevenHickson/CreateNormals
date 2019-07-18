@@ -28,7 +28,7 @@ cmake -DCMAKE_BUILD_TYPE=Release ..
 
 The example params and list are included to see how the example script runs.
 Params is set up as two lines. The first line is the camera parameters flattened as a vector. Fx, scew, Cx, 0, Fy, Cy, 0, 0, scale.
-The second line are the surface normal computation parameters. These are the inpainting window (we use 5), the normal max depth change factor (we use 0.02), and the normal adaptive smoothing size (we use 30 for Kinect1/2 data and 10 for synthetic data).
+The second line are the surface normal computation parameters. These are the inpainting window (we use 5), the normal max depth change factor (we use 0.02), and the normal adaptive smoothing size (we use 30 for Kinect1/2 data and 10 for synthetic data). The last parameter is the planar threshold parameter, which controls whether planar surfaces are joined, i.e. what's the maximum distance we allow between two pixels before we decide they are two separate planar instances.
 The third line are the semantic labels that are considered flat (i.e. floors). Ex 4,11,21.
 
 The list file is comma-delimited depth_file,labels_file,output_file.
@@ -44,7 +44,7 @@ sys.path.append('/home/steve/git/CreateNormals/')
 from python.calc_normals import NormalCalculation
 
 camera_params = [238.44,0,313.04,0,582.69,242.74,0,0,1]
-normal_params = [5,0.02,30]
+normal_params = [5,0.02,30,0.04]
 flat_labels = [4,11,15,19,21,28,34,36,37,45,64]
 norm_calc = NormalCalculation(camera_params, normal_params, flat_labels)
 new_normals = norm_calc.Calculate(depth, labels)

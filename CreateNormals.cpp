@@ -160,7 +160,7 @@ void CreateNormals(const vector<float> &camera_params,
   GetMatFromCloud(normals, output);
 
   // Let's smooth out the flat surfaces
-  ConnectedComponents(labels, flat_labels, true, output);
+  ConnectedComponents(labels, flat_labels, normal_params[3], true, output);
 
 }
 

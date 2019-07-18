@@ -21,8 +21,8 @@ normals_lib.CalculateNormals.argtypes = (ctypes.POINTER(ctypes.c_float),
                                       ctypes.POINTER(ctypes.c_float))
                                       
 camera_params = [2.3844389626620386e+02,0,3.1304475870804731e+02,0,5.8269103270988637e+02,2.4273913761751615e+02,0,0,1]
-normal_params = [5,0.02,30]
-flat_labels = [0,0,0,0,1,0,0,0,0,0,0,1,0,0,0,1,0,0,0,1,0,1,0,0,0,0,0,0,1,0,0,0,0,0,1,0,1,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+normal_params = [5,0.02,30,0.04]
+flat_labels = [4,11,21]
 flat_labels_bool = [bool(x) for x in flat_labels]
 new_normals = np.zeros(labels.shape + (3,), dtype=np.float32)
 

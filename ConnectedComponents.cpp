@@ -4,9 +4,6 @@
 using namespace std;
 using namespace cv;
 
-//#define ANGLE_MAX 0.523599
-#define ANGLE_MAX 0.0472665
-
 bool isnan(const Vec3f& vec) {
   return (isnan(vec[0]) || isnan(vec[1]) || isnan(vec[2]));
 }
@@ -18,7 +15,7 @@ float MeasureAngle(const vector<bool> &flat_labels, const Vec3f &a, const Vec3f 
   return angle;
 }
 
-int BuildGraph(const Mat &labels, const Mat &normals, const vector<bool> &flat_labels, bool reduce_edges, vector<Edge> *edges) {
+int BuildGraph(const Mat &labels, const Mat &normals, const vector<bool> &flat_labels, float planar_thresh, bool reduce_edges, vector<Edge> *edges) {
 	int width = labels.cols;
 	int height = labels.rows;
 	int num = 0;
@@ -35,7 +32,7 @@ int BuildGraph(const Mat &labels, const Mat &normals, const vector<bool> &flat_l
           edge.a = y * width + x;
           edge.b = y * width + xp;
           edge.weight = MeasureAngle(flat_labels, *pNormals, *(pNormals + 1), *pLabels, *(pLabels + 1));
-          if (!reduce_edges || (edge.weight < ANGLE_MAX && *pLabels == *(pLabels + 1))) {
+          if (!reduce_edges || (edge.weight < planar_thresh && *pLabels == *(pLabels + 1))) {
             edges->push_back(edge);
             num++;
           }
@@ -45,7 +42,7 @@ int BuildGraph(const Mat &labels, const Mat &normals, const vector<bool> &flat_l
           edge.a = y * width + x;
           edge.b = yp * width + x;
           edge.weight = MeasureAngle(flat_labels, *pNormals, *(pNormals + width), *pLabels, *(pLabels + width));
-          if (!reduce_edges || (edge.weight < ANGLE_MAX && *pLabels == *(pLabels + 1))) {
+          if (!reduce_edges || (edge.weight < planar_thresh && *pLabels == *(pLabels + 1))) {
             edges->push_back(edge);
             num++;
           }
@@ -58,12 +55,12 @@ int BuildGraph(const Mat &labels, const Mat &normals, const vector<bool> &flat_l
   return num;
 }
 
-void SegmentGraph(const vector<Edge> &edges, Universe *universe) {
+void SegmentGraph(const vector<Edge> &edges, float planar_thresh, Universe *universe) {
   vector<Edge>::const_iterator pEdge = edges.begin();
   while(pEdge != edges.end()) {
 	  int a = universe->find(pEdge->a);
 		int b = universe->find(pEdge->b);
-		if (a != b && pEdge->weight < ANGLE_MAX)
+		if (a != b && pEdge->weight < planar_thresh)
 		  universe->join(a, b);
     pEdge++;
   }
@@ -106,13 +103,13 @@ void ComputeAndSetNormalAverages(Universe &uni, const vector<bool> &flat_labels,
   }
 }
 
-void ConnectedComponents(const Mat &labels, const vector<bool> &flat_labels, bool fast_method, Mat *normals) {
+void ConnectedComponents(const Mat &labels, const vector<bool> &flat_labels, float planar_thresh, bool fast_method, Mat *normals) {
   vector<Edge> edges;
   
   // Segment the normals based on labels
-  BuildGraph(labels, *normals, flat_labels, fast_method, &edges);
+  BuildGraph(labels, *normals, flat_labels, planar_thresh, fast_method, &edges);
   Universe uni(labels.rows * labels.cols * 2);
-  SegmentGraph(edges, &uni);
+  SegmentGraph(edges, planar_thresh, &uni);
 
   // Compute and fix normal averages
   ComputeAndSetNormalAverages(uni, flat_labels, labels, normals);
