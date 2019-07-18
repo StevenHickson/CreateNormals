@@ -24,7 +24,7 @@ camera_params = [2.3844389626620386e+02,0,3.1304475870804731e+02,0,5.82691032709
 normal_params = [5,0.02,30]
 flat_labels = [0,0,0,0,1,0,0,0,0,0,0,1,0,0,0,1,0,0,0,1,0,1,0,0,0,0,0,0,1,0,0,0,0,0,1,0,1,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
 flat_labels_bool = [bool(x) for x in flat_labels]
-new_normals = np.zeros(image.shape, dtype=np.float32)
+new_normals = np.zeros(labels.shape + (3,), dtype=np.float32)
 
 height, width = labels.shape
 array_camera_params = ctypes.c_float * len(camera_params)

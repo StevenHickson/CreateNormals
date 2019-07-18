@@ -46,6 +46,6 @@ from python.calc_normals import NormalCalculation
 camera_params = [2.3844389626620386e+02,0,3.1304475870804731e+02,0,5.8269103270988637e+02,2.4273913761751615e+02,0,0,1]
 normal_params = [5,0.02,30]
 flat_labels = [4,11,15,19,21,28,34,36,37,45,64]
-norm_calc = NormalCalculation(camera_params, normal_params, flat_labels, (480, 640))
+norm_calc = NormalCalculation(camera_params, normal_params, flat_labels)
 new_normals = norm_calc.Calculate(depth, labels)
 ```

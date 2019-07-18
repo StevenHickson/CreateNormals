@@ -3,11 +3,10 @@ import ctypes
 import os
 
 class NormalCalculation:
-    def __init__(self, camera_params, normal_params, flat_labels, shape):
+    def __init__(self, camera_params, normal_params, flat_labels):
         self.camera_params = camera_params
         self.normal_params = normal_params
         self.flat_labels = flat_labels
-        self.shape = shape
         lib_file = os.path.split(os.path.realpath(__file__))[0] + '/../build/libCreateNormals.so'
         
         self.normals_lib = ctypes.CDLL(lib_file)
@@ -24,8 +23,9 @@ class NormalCalculation:
                                       ctypes.POINTER(ctypes.c_float))
         
     def Calculate(self, depth, labels):
-        normals = np.zeros(self.shape + (3,), dtype=np.float32)
-        height, width = self.shape
+        shape = depth.shape
+        normals = np.zeros(shape + (3,), dtype=np.float32)
+        height, width = shape
         array_camera_params = ctypes.c_float * len(self.camera_params)
         array_normal_params = ctypes.c_float * len(self.normal_params)
         array_flat_labels = ctypes.c_int * len(self.flat_labels)
