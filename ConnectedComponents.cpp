@@ -106,6 +106,7 @@ void ComputeAndSetNormalAverages(Universe &uni, const vector<bool> &flat_labels,
 void ConnectedComponents(const Mat &labels, const vector<bool> &flat_labels, float planar_thresh, bool fast_method, Mat *normals) {
   vector<Edge> edges;
   
+  try {
   // Segment the normals based on labels
   BuildGraph(labels, *normals, flat_labels, planar_thresh, fast_method, &edges);
   Universe uni(labels.rows * labels.cols * 2);
@@ -113,5 +114,10 @@ void ConnectedComponents(const Mat &labels, const vector<bool> &flat_labels, flo
 
   // Compute and fix normal averages
   ComputeAndSetNormalAverages(uni, flat_labels, labels, normals);
+  } catch (std::exception &e) {
+    std::cerr << "Exception caught : " << e.what() << std::endl; 
+    //cv2.imwrite("/tmp/labels.png", labels);
+    //cv2.imwrite("/tmp/normals.exr", *normals);
+  }
 }
 
