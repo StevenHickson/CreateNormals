@@ -38,7 +38,7 @@ bool ReadParameters(const string &filename,
   if(!getline(file, line))
     return false;
   // We need to initialize flat labels to be very large to prevent overflow..
-  *flat_labels = vector<bool>(1000, 0);
+  *flat_labels = vector<bool>(10000, 0);
   istringstream ss3(line);
   while(getline(ss3, value, ',')) {
     (*flat_labels)[stoi(value)] = true;
@@ -183,8 +183,8 @@ void CreateNormalsPython(float *camera_params,
   camera_params_vec.assign(camera_params, camera_params + camera_params_length);
   normal_params_vec.assign(normal_params, normal_params + normal_params_length);
   flat_labels_conv.assign(flat_labels, flat_labels + flat_labels_length);
-  // resize flat_labels to 1000 to prevent overflow errors
-  flat_labels_vec.resize(1000,0);
+  // resize flat_labels to 10000 to prevent overflow errors
+  flat_labels_vec.resize(10000,0);
   vector<int>::iterator p = flat_labels_conv.begin();
   while (p != flat_labels_conv.end())
     flat_labels_vec[*p++] = true;

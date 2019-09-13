@@ -114,10 +114,12 @@ void ConnectedComponents(const Mat &labels, const vector<bool> &flat_labels, flo
 
   // Compute and fix normal averages
   ComputeAndSetNormalAverages(uni, flat_labels, labels, normals);
+  } catch (std::length_error &e) {
+    std::cerr << "Length error caught : " << e.what() << std::endl; 
   } catch (std::exception &e) {
     std::cerr << "Exception caught : " << e.what() << std::endl; 
-    //cv2.imwrite("/tmp/labels.png", labels);
-    //cv2.imwrite("/tmp/normals.exr", *normals);
+  } catch(...) {
+    std::cerr << "Unknown error caught" << std::endl;
   }
 }
 
