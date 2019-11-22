@@ -2,6 +2,17 @@
 
 [The paper can be found here](https://arxiv.org/abs/1906.06792)
 
+if you use this code for a paper, please cite the following: 
+
+```
+@inproceedings{Hickson_2019_ICCV_Workshops,
+author = {Hickson, Steven and Raveendran, Karthik and Fathi, Alireza and Murphy, Kevin and Essa, Irfan},
+title = {Floors are Flat: Leveraging Semantics for Real-Time Surface Normal Prediction},
+booktitle = {The IEEE International Conference on Computer Vision (ICCV) Workshops},
+month = {Oct},
+year = {2019}
+}
+```
 
 This Contains the CreateNormals library. Using a depth and semantic label pair of images, we create a denoised and semantically corrected surface normals image.
 
