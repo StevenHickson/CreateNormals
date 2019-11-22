@@ -19,7 +19,7 @@ This Contains the CreateNormals library. Using a depth and semantic label pair o
 ![alt text](https://raw.githubusercontent.com/StevenHickson/CreateNormals/master/example.png)
 
 Above is the visualization of different ways of computing the "ground truth" normals. Top left: a sample image from the
-NYUDv2 dataset. Top-right: computed using method similar to [4] with a small window. Bottom-left: results of our
+NYUDv2 dataset. Top-right: computed using currently used methods (similar to [4] in the paper). Bottom-left: results of our
 method using larger depth-adaptive smoothing. Bottomright: results of our method after semantic smoothing (if
 labels are available). Note that the back and right wall are
 cleaned up to a large degree due to this correction.
